@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAC Nigeria - Services Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+      :root {
+        --primary-green: #1e5f3e;
+        --secondary-green: #2d7a52;
+        --accent-gold: #d4af37;
+        --light-gold: #f4e8a0;
+        --white: #ffffff;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-800: #343a40;
+        --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 4px 25px rgba(0, 0, 0, 0.15);
+        --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.2);
+        --gradient-primary: linear-gradient(135deg, #1e5f3e 0%, #2d7a52 100%);
+        --gradient-accent: linear-gradient(135deg, #d4af37 0%, #f4e8a0 100%);
+        --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--gray-800);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* App-like Header */
+      .app-header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 1000;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-light);
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-section img {
+        height: 45px;
+        width: auto;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+      }
+
+      .logo-text {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .notification-btn,
+      .profile-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+      }
+
+      .notification-btn:hover,
+      .profile-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Welcome Section */
+      .welcome-section {
+        margin-top: 80px;
+        padding: 2rem 0;
+        background: var(--gradient-primary);
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .welcome-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,80 Q50,100 0,80 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: 100% 100%;
+      }
+
+      .welcome-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .welcome-notification {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        animation: slideInDown 0.8s ease-out;
+      }
+
+      .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0.5rem;
+      }
+
+      .notification-icon {
+        width: 30px;
+        height: 30px;
+        background: var(--gradient-accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-green);
+        font-size: 0.9rem;
+      }
+
+      .user-greeting {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .notification-message {
+        font-size: 1rem;
+        opacity: 0.9;
+        line-height: 1.6;
+        margin-top: 0.5rem;
+      }
+
+      .welcome-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      /* Services Section */
+      .services-section {
+        padding: 3rem 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .section-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+      }
+
+      .section-subtitle {
+        font-size: 1.1rem;
+        color: var(--gray-800);
+        opacity: 0.8;
+      }
+
+      /* Services Grid */
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .service-card {
+        background: var(--gradient-card);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--gray-200);
+        transition: all 0.4s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .service-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-accent);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .service-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-heavy);
+      }
+
+      .service-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .service-icon {
+        width: 70px;
+        height: 70px;
+        background: var(--gradient-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .service-card:hover .service-icon {
+        transform: scale(1.1) rotate(5deg);
+      }
+
+      .service-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 0.8rem;
+      }
+
+      .service-description {
+        color: var(--gray-800);
+        opacity: 0.8;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+
+      .service-features {
+        list-style: none;
+        margin-bottom: 1.5rem;
+      }
+
+      .service-features li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--gray-800);
+      }
+
+      .service-features li i {
+        color: var(--accent-gold);
+        font-size: 0.8rem;
+      }
+
+      .service-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+      }
+
+      .service-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+
+      .service-btn {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .service-btn:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Quick Actions */
+      .quick-actions {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--gray-200);
+        margin-bottom: 2rem;
+      }
+
+      .quick-actions-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .quick-action-btn {
+        background: var(--gradient-card);
+        border: 1px solid var(--gray-200);
+        border-radius: 15px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--gray-800);
+      }
+
+      .quick-action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-medium);
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      .quick-action-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      .quick-action-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      /* Footer */
+      .app-footer {
+        background: var(--primary-green);
+        color: var(--white);
+        padding: 2rem 0;
+        text-align: center;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--white);
+        text-decoration: none;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+      }
+
+      .footer-links a:hover {
+        opacity: 1;
+      }
+
+      /* Animations */
+      @keyframes slideInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* Loading Animation */
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--white);
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          padding: 0 15px;
+        }
+
+        .logo-text {
+          font-size: 1.2rem;
+        }
+
+        .welcome-content {
+          padding: 0 15px;
+        }
+
+        .user-greeting {
+          font-size: 1.1rem;
+        }
+
+        .services-section {
+          padding-left: 15px;
+          padding-right: 15px;
+        }
+
+        .services-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .service-card {
+          padding: 1.5rem;
+        }
+
+        .section-title {
+          font-size: 1.8rem;
+        }
+
+        .quick-actions-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .footer-links {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .welcome-stats {
+          grid-template-columns: 1fr;
+        }
+
+        .quick-actions-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .service-action {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: stretch;
+        }
+
+        .service-btn {
+          justify-content: center;
+        }
+      }
+
+      /* Notification Badge */
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+
+      /* Service Status Indicators */
+      .service-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .status-available {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-popular {
+        background: var(--light-gold);
+        color: var(--primary-green);
+      }
+
+      .status-new {
+        background: #cce5ff;
+        color: #004085;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <img
+            src="https://th.bing.com/th/id/OIP.BYD329vkS6TICObJPDFTPAHaHa?rs=1&pid=ImgDetMain"
+            alt="CAC Logo"
+          />
+          <span class="logo-text">CAC Nigeria</span>
+        </div>
+        <div class="header-actions">
+          <button class="notification-btn" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <button class="profile-btn" onclick="showProfile()">
+            <i class="fas fa-user"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <div class="welcome-content">
+        <div class="welcome-notification">
+          <div class="notification-header">
+            <div class="notification-icon">
+              <i class="fas fa-hand-wave"></i>
+            </div>
+            <h2 class="user-greeting" id="userGreeting">
+              <span class="loading"></span> Loading...
+            </h2>
+          </div>
+          <p class="notification-message">
+            Welcome to your CAC Nigeria services dashboard! We're excited to
+            help you manage your business registration and corporate affairs
+            efficiently. Our platform provides secure, fast, and reliable
+            services to support your business growth in Nigeria.
+          </p>
+        </div>
+
+        <div class="welcome-stats">
+          <div class="stat-card">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Service Availability</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">2.5M+</span>
+            <span class="stat-label">Businesses Registered</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">99.9%</span>
+            <span class="stat-label">Uptime Guarantee</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">48hrs</span>
+            <span class="stat-label">Average Processing</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section">
+      <div class="section-header">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">
+          Choose from our comprehensive range of business registration and
+          corporate services
+        </p>
+      </div>
+
+      <!-- Quick Actions -->
+      <!-- <div class="quick-actions">
+        <h3 class="quick-actions-title">Quick Actions</h3>
+        <div class="quick-actions-grid">
+          <a
+            href="#"
+            class="quick-action-btn"
+            onclick="navigateToService('status-check')"
+          >
+            <i class="fas fa-search quick-action-icon"></i>
+            <span class="quick-action-label">Check Status</span>
+          </a>
+          <a
+            href="#"
+            class="quick-action-btn"
+            onclick="navigateToService('document-download')"
+          >
+            <i class="fas fa-download quick-action-icon"></i>
+            <span class="quick-action-label">Download Docs</span>
+          </a>
+          <a
+            href="#"
+            class="quick-action-btn"
+            onclick="navigateToService('payment-history')"
+          >
+            <i class="fas fa-receipt quick-action-icon"></i>
+            <span class="quick-action-label">Payment History</span>
+          </a>
+          <a
+            href="#"
+            class="quick-action-btn"
+            onclick="navigateToService('support')"
+          >
+            <i class="fas fa-headset quick-action-icon"></i>
+            <span class="quick-action-label">Get Support</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Services Grid -->
+      <div class="services-grid">
+        <!-- Business Registration -->
+        <div
+          class="service-card"
+          onclick="navigateToService('business-registration')"
+        >
+          <div class="service-status status-popular">Most Popular</div>
+          <div class="service-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <h3 class="service-title">Business Registration</h3>
+          <p class="service-description">
+            Register your business name, limited liability company, or
+            incorporate your business with the Corporate Affairs Commission.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Business Name Registration</li>
+            <li><i class="fas fa-check"></i> Limited Liability Company</li>
+            <li><i class="fas fa-check"></i> Incorporation Services</li>
+            <li><i class="fas fa-check"></i> Certificate of Incorporation</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦15,000</span>
+            <button class="service-btn">
+              Get Started <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Annual Returns -->
+        <div class="service-card" onclick="navigateToService('annual-returns')">
+          <div class="service-status status-available">Available</div>
+          <div class="service-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <h3 class="service-title">Annual Returns Filing</h3>
+          <p class="service-description">
+            File your annual returns and maintain compliance with CAC
+            regulations. Keep your business in good standing.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Annual Returns Form</li>
+            <li><i class="fas fa-check"></i> Compliance Monitoring</li>
+            <li><i class="fas fa-check"></i> Deadline Reminders</li>
+            <li><i class="fas fa-check"></i> Status Tracking</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦5,000</span>
+            <button class="service-btn">
+              File Now <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Document Services -->
+        <div
+          class="service-card"
+          onclick="navigateToService('document-services')"
+        >
+          <div class="service-status status-available">Available</div>
+          <div class="service-icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <h3 class="service-title">Document Services</h3>
+          <p class="service-description">
+            Access and download official business documents, certificates, and
+            compliance reports.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Certificate Downloads</li>
+            <li><i class="fas fa-check"></i> Status Reports</li>
+            <li><i class="fas fa-check"></i> Compliance Documents</li>
+            <li><i class="fas fa-check"></i> Certified Copies</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦2,000</span>
+            <button class="service-btn">
+              Access Docs <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Name Search -->
+        <div class="service-card" onclick="navigateToService('name-search')">
+          <div class="service-status status-available">Available</div>
+          <div class="service-icon">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3 class="service-title">Name Availability Search</h3>
+          <p class="service-description">
+            Search and reserve your preferred business name. Check availability
+            and secure your brand identity.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Name Availability Check</li>
+            <li><i class="fas fa-check"></i> Name Reservation</li>
+            <li><i class="fas fa-check"></i> Similar Names Report</li>
+            <li><i class="fas fa-check"></i> Brand Protection</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦1,000</span>
+            <button class="service-btn">
+              Search Now <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Company Search -->
+        <div class="service-card" onclick="navigateToService('company-search')">
+          <div class="service-status status-available">Available</div>
+          <div class="service-icon">
+            <i class="fas fa-building-user"></i>
+          </div>
+          <h3 class="service-title">Company Information Search</h3>
+          <p class="service-description">
+            Search for registered companies, verify business information, and
+            access public company records.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Company Verification</li>
+            <li><i class="fas fa-check"></i> Director Information</li>
+            <li><i class="fas fa-check"></i> Registration Status</li>
+            <li><i class="fas fa-check"></i> Public Records Access</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦500</span>
+            <button class="service-btn">
+              Search Company <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Amendment Services -->
+        <div
+          class="service-card"
+          onclick="navigateToService('amendment-services')"
+        >
+          <div class="service-status status-new">New Service</div>
+          <div class="service-icon">
+            <i class="fas fa-edit"></i>
+          </div>
+          <h3 class="service-title">Amendment Services</h3>
+          <p class="service-description">
+            Make changes to your company information, update directors, modify
+            share capital, and more.
+          </p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Director Changes</li>
+            <li><i class="fas fa-check"></i> Address Updates</li>
+            <li><i class="fas fa-check"></i> Share Capital Changes</li>
+            <li><i class="fas fa-check"></i> Name Changes</li>
+          </ul>
+          <div class="service-action">
+            <span class="service-price">From ₦10,000</span>
+            <button class="service-btn">
+              Make Changes <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Corporate Affairs Commission Nigeria. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDJP2XIR51qGTLINiKvEoscYTMt11CaZ5s",
+        authDomain: "paytrust-71e30.firebaseapp.com",
+        databaseURL: "https://paytrust-71e30-default-rtdb.firebaseio.com/",
+        projectId: "paytrust-71e30",
+        storageBucket: "paytrust-71e30.appspot.com",
+        messagingSenderId: "492609516838",
+        appId: "1:492609516838:android:5a924ad3b7e8e508fa3de7",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      // Reference to the users node in Firebase
+      const usersRef = database.ref("users");
+      const notificationsRef = database.ref("notifications");
+
+      // DOM elements
+      const userGreetingElement = document.getElementById("userGreeting");
+      const notificationBadge = document.querySelector(".notification-badge");
+
+      // Load user data and display greeting from Firebase
+      function loadUserData() {
+        // Get the current user from localStorage (set during registration/login)
+        const userData = JSON.parse(localStorage.getItem("cacUser"));
+
+        if (userData && userData.email) {
+          // Find the user in Firebase by email
+          usersRef
+            .orderByChild("email")
+            .equalTo(userData.email)
+            .once("value")
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                const userKey = Object.keys(snapshot.val())[0];
+                const user = snapshot.val()[userKey];
+
+                // Store the Firebase user ID in localStorage
+                localStorage.setItem("cacUserId", userKey);
+
+                // Display the user greeting
+                displayUserGreeting(user.fullName || user.email);
+
+                // Load notifications for this user
+                loadUserNotifications(userKey);
+
+                // Update the UI with additional user data if needed
+                updateUserProfileUI(user);
+              } else {
+                displayDefaultGreeting();
+                console.warn("User not found in Firebase database");
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching user data:", error);
+              displayDefaultGreeting();
+            });
+        } else {
+          displayDefaultGreeting();
+          console.warn("No user data found in localStorage");
+        }
+      }
+
+      // Display personalized greeting
+      function displayUserGreeting(name) {
+        const firstName = name.split(" ")[0];
+        const currentHour = new Date().getHours();
+
+        let timeGreeting;
+        if (currentHour < 12) {
+          timeGreeting = "Good morning";
+        } else if (currentHour < 17) {
+          timeGreeting = "Good afternoon";
+        } else {
+          timeGreeting = "Good evening";
+        }
+
+        userGreetingElement.innerHTML = `${timeGreeting}, ${firstName}! 👋`;
+      }
+
+      // Display default greeting
+      function displayDefaultGreeting() {
+        userGreetingElement.innerHTML = "Welcome, Valued Customer! 👋";
+      }
+
+      // Update UI with user profile data
+      function updateUserProfileUI(userData) {
+        // You can extend this function to update more UI elements with user data
+        console.log("User data loaded:", userData);
+
+        // Example: Update any profile-related UI elements here
+        //   document.getElementById("profileName").textContent = userData.fullName || "User";
+      }
+
+      // Load user notifications
+      function loadUserNotifications(userId) {
+        notificationsRef
+          .child(userId)
+          .once("value")
+          .then((snapshot) => {
+            const notifications = snapshot.val();
+            if (notifications) {
+              const unreadCount = Object.values(notifications).filter(
+                (notif) => !notif.read
+              ).length;
+              notificationBadge.textContent = unreadCount;
+              notificationBadge.style.display =
+                unreadCount > 0 ? "flex" : "none";
+            } else {
+              notificationBadge.style.display = "none";
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching notifications:", error);
+            notificationBadge.style.display = "none";
+          });
+      }
+
+      // Show notifications modal
+      function showNotifications() {
+        const userId = localStorage.getItem("cacUserId");
+        if (!userId) {
+          alert("Please log in to view notifications");
+          return;
+        }
+
+        notificationsRef
+          .child(userId)
+          .once("value")
+          .then((snapshot) => {
+            const notifications = snapshot.val();
+            let notificationText = "Your Notifications:\n\n";
+
+            if (notifications) {
+              // Sort notifications by timestamp (newest first)
+              const sortedNotifications = Object.values(notifications).sort(
+                (a, b) => b.timestamp - a.timestamp
+              );
+
+              sortedNotifications.forEach((notif) => {
+                notificationText += `• ${notif.message} (${new Date(
+                  notif.timestamp
+                ).toLocaleString()})\n`;
+              });
+
+              // Mark notifications as read
+              const updates = {};
+              Object.keys(notifications).forEach((key) => {
+                updates[`${userId}/${key}/read`] = true;
+              });
+              notificationsRef.update(updates);
+
+              // Update badge
+              notificationBadge.style.display = "none";
+            } else {
+              notificationText += "No notifications available";
+            }
+
+            alert(notificationText);
+          })
+          .catch((error) => {
+            console.error("Error fetching notifications:", error);
+            alert("Error loading notifications. Please try again.");
+          });
+      }
+
+      // Show user profile
+      function showProfile() {
+        const userData = JSON.parse(localStorage.getItem("cacUser"));
+        const userId = localStorage.getItem("cacUserId");
+
+        if (!userData || !userId) {
+          alert("Profile information not available. Please log in.");
+          return;
+        }
+
+        // Get the most recent data from Firebase
+        usersRef
+          .child(userId)
+          .once("value")
+          .then((snapshot) => {
+            const firebaseUserData = snapshot.val();
+            if (firebaseUserData) {
+              const profileInfo = `
+                Profile Information:
+                ------------------
+                Name: ${firebaseUserData.fullName || "N/A"}
+                Email: ${firebaseUserData.email || "N/A"}
+                Phone: ${firebaseUserData.phone || "N/A"}
+                NIN/BVN: ${firebaseUserData.nin || "N/A"}
+                Account Type: ${firebaseUserData.accountType || "Standard"}
+                ${
+                  firebaseUserData.companyName
+                    ? `Company: ${firebaseUserData.companyName}`
+                    : ""
+                }
+              `;
+              alert(profileInfo);
+            } else {
+              // Fallback to localStorage data if Firebase data not found
+              const fallbackInfo = `
+                Profile Information:
+                ------------------
+                Name: ${userData.fullName || "N/A"}
+                Email: ${userData.email || "N/A"}
+                Phone: ${userData.phone || "N/A"}
+              `;
+              alert(fallbackInfo);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching profile:", error);
+            alert("Error loading profile. Please try again.");
+          });
+      }
+
+      // Navigation function for services
+      function navigateToService(serviceType) {
+        const clickedCard = event.currentTarget;
+
+        // Add click feedback
+        if (clickedCard.classList.contains("service-card")) {
+          clickedCard.style.transform = "scale(0.95)";
+          setTimeout(() => {
+            clickedCard.style.transform = "";
+          }, 150);
+        }
+
+        // Store service type for the next page
+        localStorage.setItem("selectedService", serviceType);
+
+        // Special handling for business registration 1
+        if (serviceType === "business-registration") {
+          window.location.href = "business-registration.html";
+          return;
+        }
+
+        // Special handling for annual-returns
+        if (serviceType === "annual-returns") {
+          window.location.href = "annual-returns.html";
+          return;
+        }
+
+        // Special handling for document-services
+        if (serviceType === "document-services") {
+          window.location.href = "document-services.html";
+          return;
+        }
+
+        // Special handling for name search
+        if (serviceType === "name-search") {
+          window.location.href = "name-search.html";
+          return;
+        }
+
+        // Special handling for company search
+        if (serviceType === "company-search") {
+          window.location.href = "company-search.html";
+          return;
+        }
+
+        // Special handling for amendment-services
+        if (serviceType === "amendment-services") {
+          window.location.href = "amendment-services.html";
+          return;
+        }
+
+        // Default behavior for other services
+        setTimeout(() => {
+          const serviceName = serviceType.replace(/-/g, " ");
+          alert(`Redirecting to ${serviceName} service...`);
+          // In a real app, this would navigate to the service page
+          window.location.href = `service-detail.html?service=${serviceType}`;
+        }, 300);
+      }
+
+      // Check authentication status
+      function checkAuthStatus() {
+        const userData = JSON.parse(localStorage.getItem("cacUser"));
+        if (!userData) {
+          setTimeout(() => {
+            if (confirm("Session expired. Would you like to log in again?")) {
+              window.location.href = "registration.html";
+            }
+          }, 3000);
+        }
+      }
+
+      // Initialize the app
+      document.addEventListener("DOMContentLoaded", function () {
+        loadUserData();
+        checkAuthStatus();
+
+        // Add animation to service cards
+        animateServiceCards();
+
+        // Add ripple effects to buttons
+        setupRippleEffects();
+      });
+
+      // Animate service cards on load
+      function animateServiceCards() {
+        setTimeout(() => {
+          document.querySelectorAll(".service-card").forEach((card, index) => {
+            setTimeout(() => {
+              card.style.opacity = "1";
+              card.style.transform = "translateY(0)";
+            }, index * 100);
+          });
+        }, 500);
+      }
+
+      // Setup ripple effects for buttons
+      function setupRippleEffects() {
+        document
+          .querySelectorAll(".service-btn, .quick-action-btn")
+          .forEach((btn) => {
+            btn.addEventListener("click", function (e) {
+              const ripple = document.createElement("span");
+              const rect = this.getBoundingClientRect();
+              const size = Math.max(rect.width, rect.height);
+              const x = e.clientX - rect.left - size / 2;
+              const y = e.clientY - rect.top - size / 2;
+
+              ripple.style.width = ripple.style.height = size + "px";
+              ripple.style.left = x + "px";
+              ripple.style.top = y + "px";
+              ripple.classList.add("ripple-effect");
+
+              this.appendChild(ripple);
+
+              setTimeout(() => {
+                ripple.remove();
+              }, 600);
+            });
+          });
+
+        // Add CSS for ripple effect
+        const style = document.createElement("style");
+        style.textContent = `
+          .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+          }
+
+          @keyframes ripple {
+            to {
+              transform: scale(4);
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    </script>
+  </body>
+</html>

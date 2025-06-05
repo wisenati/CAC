@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAC Nigeria - Business Name Search & Reservation</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+      :root {
+        --primary-green: #1e5f3e;
+        --secondary-green: #2d7a52;
+        --accent-gold: #d4af37;
+        --light-gold: #f4e8a0;
+        --white: #ffffff;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-800: #343a40;
+        --success-green: #28a745;
+        --warning-orange: #fd7e14;
+        --danger-red: #dc3545;
+        --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 4px 25px rgba(0, 0, 0, 0.15);
+        --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.2);
+        --gradient-primary: linear-gradient(135deg, #1e5f3e 0%, #2d7a52 100%);
+        --gradient-accent: linear-gradient(135deg, #d4af37 0%, #f4e8a0 100%);
+        --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --gradient-warning: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+        --gradient-danger: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--gray-800);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* App-like Header */
+      .app-header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 1000;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-light);
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-section img {
+        height: 45px;
+        width: auto;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+      }
+
+      .logo-text {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .notification-btn,
+      .profile-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+      }
+
+      .notification-btn:hover,
+      .profile-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Main Content */
+      .main-content {
+        max-width: 1200px;
+        margin: 100px auto 40px;
+        padding: 0 20px;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.8s ease-out;
+      }
+
+      .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        color: var(--gray-800);
+        opacity: 0.8;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      /* Search Section */
+      .search-section {
+        background: var(--gradient-card);
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: var(--shadow-medium);
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .search-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: var(--gradient-accent);
+      }
+
+      .search-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+
+      .search-description {
+        text-align: center;
+        color: var(--gray-800);
+        opacity: 0.8;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+
+      .search-container {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: var(--white);
+        border-radius: 50px;
+        border: 2px solid var(--gray-200);
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+        overflow: hidden;
+      }
+
+      .search-input-wrapper:focus-within {
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 4px rgba(30, 95, 62, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 20px;
+        color: var(--primary-green);
+        font-size: 1.2rem;
+        z-index: 2;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 18px 20px 18px 60px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        background: transparent;
+        color: var(--gray-800);
+        outline: none;
+      }
+
+      .search-input::placeholder {
+        color: var(--gray-800);
+        opacity: 0.6;
+      }
+
+      .search-btn {
+        background: var(--gradient-primary);
+        color: var(--white);
+        border: none;
+        padding: 18px 30px;
+        border-radius: 0 50px 50px 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 140px;
+        justify-content: center;
+      }
+
+      .search-btn:hover {
+        background: var(--secondary-green);
+        transform: translateX(3px);
+      }
+
+      .search-btn:disabled {
+        background: var(--gray-300);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Search Suggestions */
+      .search-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-radius: 15px;
+        box-shadow: var(--shadow-medium);
+        border: 1px solid var(--gray-200);
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        margin-top: 5px;
+      }
+
+      .suggestion-item {
+        padding: 15px 20px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .suggestion-item:hover {
+        background: var(--gray-100);
+      }
+
+      .suggestion-item:last-child {
+        border-bottom: none;
+      }
+
+      .suggestion-icon {
+        color: var(--primary-green);
+      }
+
+      /* Search Results */
+      .search-results {
+        margin-top: 2rem;
+        display: none;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      .result-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--gray-200);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .result-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+      }
+
+      .result-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+      }
+
+      .result-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .status-available {
+        background: var(--gradient-success);
+        color: var(--white);
+      }
+
+      .status-taken {
+        background: var(--gradient-danger);
+        color: var(--white);
+      }
+
+      .status-reserved {
+        background: var(--gradient-warning);
+        color: var(--white);
+      }
+
+      .status-verified {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      .status-pending {
+        background: var(--gray-200);
+        color: var(--gray-800);
+      }
+
+      .result-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+      }
+
+      .info-icon {
+        color: var(--primary-green);
+        width: 16px;
+      }
+
+      .result-description {
+        background: var(--gray-100);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-green);
+      }
+
+      .verification-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: var(--gradient-success);
+        color: var(--white);
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        animation: pulse 2s infinite;
+      }
+
+      .violence-warning {
+        background: var(--gradient-danger);
+        color: var(--white);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+      }
+
+      /* Action Buttons */
+      .result-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        color: var(--white);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      .btn-accent {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      .btn-accent:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      .btn-secondary {
+        background: var(--gray-200);
+        color: var(--gray-800);
+      }
+
+      .btn-secondary:hover {
+        background: var(--gray-300);
+      }
+
+      .btn:disabled {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Payment Modal */
+      .payment-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(5px);
+      }
+
+      .payment-modal-content {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: var(--shadow-heavy);
+        animation: modalSlideIn 0.3s ease-out;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--gray-200);
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: var(--gray-800);
+        transition: all 0.3s ease;
+      }
+
+      .modal-close:hover {
+        background: var(--danger-red);
+        color: var(--white);
+      }
+
+      .modal-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+
+      .payment-details {
+        background: var(--gray-100);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--gray-200);
+      }
+
+      .payment-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.8rem;
+        font-size: 1rem;
+      }
+
+      .payment-total {
+        border-top: 2px solid var(--primary-green);
+        padding-top: 0.8rem;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--primary-green);
+      }
+
+      .bank-transfer-details {
+        background: var(--gradient-card);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--gray-200);
+      }
+
+      .bank-detail {
+        display: flex;
+        margin-bottom: 0.8rem;
+        align-items: center;
+      }
+
+      .bank-detail-label {
+        font-weight: 600;
+        min-width: 120px;
+        color: var(--primary-green);
+      }
+
+      .copy-btn {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+        border: none;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .copy-btn:hover {
+        transform: scale(1.05);
+      }
+
+      /* File Upload */
+      .file-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+        border: 2px dashed var(--primary-green);
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--gray-100);
+        margin-bottom: 1.5rem;
+      }
+
+      .file-upload:hover {
+        background: rgba(30, 95, 62, 0.05);
+        transform: translateY(-2px);
+      }
+
+      .file-upload-icon {
+        font-size: 2.5rem;
+        color: var(--primary-green);
+        margin-bottom: 1rem;
+      }
+
+      .file-upload-text {
+        text-align: center;
+        color: var(--gray-800);
+      }
+
+      .file-name {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+
+      /* Status Messages */
+      .status-message {
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+      }
+
+      .status-success {
+        background: var(--gradient-success);
+        color: var(--white);
+      }
+
+      .status-warning {
+        background: var(--gradient-warning);
+        color: var(--white);
+      }
+
+      .status-error {
+        background: var(--gradient-danger);
+        color: var(--white);
+      }
+
+      .status-info {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      /* Loading Animation */
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--white);
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Footer */
+      .app-footer {
+        background: var(--primary-green);
+        color: var(--white);
+        padding: 2rem 0;
+        text-align: center;
+        margin-top: 3rem;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          padding: 0 15px;
+        }
+
+        .logo-text {
+          font-size: 1.2rem;
+        }
+
+        .main-content {
+          margin-top: 80px;
+          padding: 0 15px;
+        }
+
+        .page-title {
+          font-size: 2rem;
+        }
+
+        .search-section {
+          padding: 2rem 1.5rem;
+        }
+
+        .search-input-wrapper {
+          flex-direction: column;
+          border-radius: 15px;
+        }
+
+        .search-input {
+          padding: 15px 20px;
+          border-radius: 15px 15px 0 0;
+        }
+
+        .search-btn {
+          border-radius: 0 0 15px 15px;
+          padding: 15px 20px;
+        }
+
+        .result-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .result-actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .payment-modal-content {
+          margin: 1rem;
+          width: calc(100% - 2rem);
+          padding: 2rem 1.5rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .page-title {
+          font-size: 1.8rem;
+        }
+
+        .search-title {
+          font-size: 1.5rem;
+        }
+
+        .result-info {
+          grid-template-columns: 1fr;
+        }
+
+        .bank-detail {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.3rem;
+        }
+
+        .bank-detail-label {
+          min-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <img
+            src="https://th.bing.com/th/id/OIP.BYD329vkS6TICObJPDFTPAHaHa?rs=1&pid=ImgDetMain"
+            alt="CAC Logo"
+          />
+          <span class="logo-text">CAC Nigeria</span>
+        </div>
+        <div class="header-actions">
+          <button class="notification-btn" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <button class="profile-btn" onclick="showProfile()">
+            <i class="fas fa-user"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Business Name Search & Reservation</h1>
+        <p class="page-subtitle">
+          Search for available business names, check their status, and reserve
+          your preferred name with instant verification
+        </p>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <h2 class="search-title">Search Business Names</h2>
+        <p class="search-description">
+          Enter your desired business name to check availability and get instant
+          verification status
+        </p>
+
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              id="businessNameSearch"
+              class="search-input"
+              placeholder="Enter business name to search..."
+              autocomplete="off"
+            />
+            <button
+              class="search-btn"
+              id="searchBtn"
+              onclick="searchBusinessName()"
+            >
+              <i class="fas fa-search"></i>
+              <span>Search</span>
+            </button>
+          </div>
+
+          <!-- Search Suggestions -->
+          <div class="search-suggestions" id="searchSuggestions">
+            <div
+              class="suggestion-item"
+              onclick="selectSuggestion('Tech Solutions Nigeria')"
+            >
+              <i class="fas fa-lightbulb suggestion-icon"></i>
+              <span>Tech Solutions Nigeria</span>
+            </div>
+            <div
+              class="suggestion-item"
+              onclick="selectSuggestion('Green Energy Services')"
+            >
+              <i class="fas fa-leaf suggestion-icon"></i>
+              <span>Green Energy Services</span>
+            </div>
+            <div
+              class="suggestion-item"
+              onclick="selectSuggestion('Digital Marketing Hub')"
+            >
+              <i class="fas fa-chart-line suggestion-icon"></i>
+              <span>Digital Marketing Hub</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Results -->
+      <div class="search-results" id="searchResults">
+        <!-- Results will be populated here -->
+      </div>
+    </main>
+
+    <!-- Payment Modal -->
+    <div class="payment-modal" id="paymentModal">
+      <div class="payment-modal-content">
+        <button class="modal-close" onclick="closePaymentModal()">
+          <i class="fas fa-times"></i>
+        </button>
+
+        <h3 class="modal-title">Reserve Business Name</h3>
+
+        <div class="payment-details">
+          <div class="payment-item">
+            <span>Business Name:</span>
+            <span id="paymentBusinessName">-</span>
+          </div>
+          <div class="payment-item">
+            <span>Reservation Fee:</span>
+            <span>₦5,000</span>
+          </div>
+          <div class="payment-item">
+            <span>Processing Fee:</span>
+            <span>₦500</span>
+          </div>
+          <div class="payment-item">
+            <span>Verification Fee:</span>
+            <span>₦1,000</span>
+          </div>
+          <div class="payment-item payment-total">
+            <span>Total Amount:</span>
+            <span>₦6,500</span>
+          </div>
+        </div>
+
+        <div class="bank-transfer-details">
+          <h4 style="margin-bottom: 1rem; color: var(--primary-green)">
+            Bank Transfer Details
+          </h4>
+          <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.8">
+            Transfer the exact amount to the account below:
+          </p>
+
+          <div class="bank-detail">
+            <span class="bank-detail-label">Bank Name:</span>
+            <span>Palmpay</span>
+            <button class="copy-btn" onclick="copyToClipboard('Palmpay')">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Account Name:</span>
+            <span>ALRAHUZ</span>
+            <button
+              class="copy-btn"
+              onclick="copyToClipboard('Corporate Affairs Commission')"
+            >
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Account Number:</span>
+            <span>6661855506</span>
+            <button class="copy-btn" onclick="copyToClipboard('6661855506')">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Reference:</span>
+            <span id="paymentReference">-</span>
+            <button
+              class="copy-btn"
+              onclick="copyToClipboard(document.getElementById('paymentReference').textContent)"
+            >
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="payment-proof">
+          <h4 style="margin-bottom: 1rem; color: var(--primary-green)">
+            Upload Payment Proof
+          </h4>
+          <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.8">
+            After making the transfer, upload your payment receipt:
+          </p>
+
+          <div
+            class="file-upload"
+            onclick="document.getElementById('paymentProofFile').click()"
+          >
+            <div class="file-upload-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="file-upload-text">
+              <p><strong>Click to upload payment receipt</strong></p>
+              <p><small>(JPEG, PNG or PDF, max 2MB)</small></p>
+            </div>
+            <span class="file-name" id="paymentProofFileName"></span>
+          </div>
+          <input
+            type="file"
+            id="paymentProofFile"
+            accept=".jpg,.jpeg,.png,.pdf"
+            style="display: none"
+            onchange="handlePaymentProofUpload(this)"
+          />
+        </div>
+
+        <div class="result-actions">
+          <button class="btn btn-secondary" onclick="closePaymentModal()">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="submitPaymentProofBtn"
+            onclick="submitPaymentProof()"
+            disabled
+          >
+            <i class="fas fa-check-circle"></i> Submit Payment Proof
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Corporate Affairs Commission Nigeria. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDJP2XIR51qGTLINiKvEoscYTMt11CaZ5s",
+        authDomain: "paytrust-71e30.firebaseapp.com",
+        databaseURL: "https://paytrust-71e30-default-rtdb.firebaseio.com/",
+        projectId: "paytrust-71e30",
+        storageBucket: "paytrust-71e30.appspot.com",
+        messagingSenderId: "492609516838",
+        appId: "1:492609516838:android:5a924ad3b7e8e508fa3de7",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      const businessNamesRef = database.ref("businessNames");
+      const nameReservationsRef = database.ref("nameReservations");
+      const namePaymentsRef = database.ref("namePayments");
+
+      // Current search and payment data
+      let currentSearchResults = [];
+      let currentPaymentData = {};
+
+      // Violent/inappropriate words filter
+      const violentWords = [
+        "kill",
+        "murder",
+        "death",
+        "violence",
+        "terror",
+        "bomb",
+        "weapon",
+        "gun",
+        "knife",
+        "hate",
+        "racist",
+        "nazi",
+        "war",
+        "blood",
+        "revenge",
+        "destroy",
+        "attack",
+        "assault",
+      ];
+
+      // Sample business names database (in real app, this would be from Firebase)
+      const sampleBusinessNames = [
+        {
+          name: "Tech Solutions Nigeria",
+          status: "available",
+          category: "Technology",
+          description: "Technology solutions and consulting services",
+          verified: true,
+          registrationDate: null,
+          owner: null,
+        },
+        {
+          name: "Green Energy Services",
+          status: "available",
+          category: "Energy",
+          description: "Renewable energy solutions and services",
+          verified: true,
+          registrationDate: null,
+          owner: null,
+        },
+        {
+          name: "Digital Marketing Hub",
+          status: "taken",
+          category: "Marketing",
+          description: "Digital marketing and advertising services",
+          verified: true,
+          registrationDate: "2023-05-15",
+          owner: "John Doe Enterprises",
+        },
+        {
+          name: "Smart Logistics Ltd",
+          status: "reserved",
+          category: "Logistics",
+          description: "Smart logistics and supply chain solutions",
+          verified: true,
+          registrationDate: "2025-01-10",
+          owner: "Reserved by Jane Smith",
+        },
+      ];
+
+      // Initialize search functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("businessNameSearch");
+        const searchSuggestions = document.getElementById("searchSuggestions");
+
+        // Show suggestions on focus
+        searchInput.addEventListener("focus", function () {
+          if (this.value.length === 0) {
+            searchSuggestions.style.display = "block";
+          }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener("click", function (e) {
+          if (
+            !searchInput.contains(e.target) &&
+            !searchSuggestions.contains(e.target)
+          ) {
+            searchSuggestions.style.display = "none";
+          }
+        });
+
+        // Search on Enter key
+        searchInput.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            searchBusinessName();
+          }
+        });
+
+        // Real-time search suggestions
+        searchInput.addEventListener("input", function () {
+          const query = this.value.toLowerCase();
+          if (query.length > 2) {
+            showSearchSuggestions(query);
+          } else {
+            searchSuggestions.style.display = "none";
+          }
+        });
+
+        // Check if user is logged in
+        const userData = JSON.parse(localStorage.getItem("cacUser"));
+        if (!userData) {
+          showStatusMessage(
+            "Please log in to access name search services",
+            "warning"
+          );
+          setTimeout(() => {
+            window.location.href = "registration.html";
+          }, 3000);
+        }
+      });
+
+      // Show search suggestions based on query
+      function showSearchSuggestions(query) {
+        const suggestions = sampleBusinessNames
+          .filter((name) => name.name.toLowerCase().includes(query))
+          .slice(0, 5);
+
+        const suggestionsContainer =
+          document.getElementById("searchSuggestions");
+
+        if (suggestions.length > 0) {
+          suggestionsContainer.innerHTML = suggestions
+            .map(
+              (suggestion) => `
+            <div class="suggestion-item" onclick="selectSuggestion('${suggestion.name}')">
+              <i class="fas fa-lightbulb suggestion-icon"></i>
+              <span>${suggestion.name}</span>
+            </div>
+          `
+            )
+            .join("");
+          suggestionsContainer.style.display = "block";
+        } else {
+          suggestionsContainer.style.display = "none";
+        }
+      }
+
+      // Select suggestion
+      function selectSuggestion(name) {
+        document.getElementById("businessNameSearch").value = name;
+        document.getElementById("searchSuggestions").style.display = "none";
+        searchBusinessName();
+      }
+
+      // Main search function
+      function searchBusinessName() {
+        const searchTerm = document
+          .getElementById("businessNameSearch")
+          .value.trim();
+
+        if (!searchTerm) {
+          showStatusMessage(
+            "Please enter a business name to search",
+            "warning"
+          );
+          return;
+        }
+
+        // Show loading state
+        const searchBtn = document.getElementById("searchBtn");
+        const originalContent = searchBtn.innerHTML;
+        searchBtn.innerHTML =
+          '<div class="loading"></div><span>Searching...</span>';
+        searchBtn.disabled = true;
+
+        // Hide suggestions
+        document.getElementById("searchSuggestions").style.display = "none";
+
+        // Simulate search delay
+        setTimeout(() => {
+          performSearch(searchTerm);
+
+          // Reset button
+          searchBtn.innerHTML = originalContent;
+          searchBtn.disabled = false;
+        }, 1500);
+      }
+
+      // Perform the actual search
+      function performSearch(searchTerm) {
+        // Check for violent/inappropriate content
+        const isViolent = violentWords.some((word) =>
+          searchTerm.toLowerCase().includes(word.toLowerCase())
+        );
+
+        // Find exact matches and similar names
+        const exactMatch = sampleBusinessNames.find(
+          (name) => name.name.toLowerCase() === searchTerm.toLowerCase()
+        );
+
+        const similarNames = sampleBusinessNames.filter(
+          (name) =>
+            name.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            searchTerm.toLowerCase().includes(name.name.toLowerCase())
+        );
+
+        // Create search results
+        currentSearchResults = [];
+
+        if (exactMatch) {
+          currentSearchResults.push({
+            ...exactMatch,
+            matchType: "exact",
+            violent: isViolent,
+          });
+        } else {
+          // Create a new entry for the searched name
+          currentSearchResults.push({
+            name: searchTerm,
+            status: isViolent ? "rejected" : "available",
+            category: "General",
+            description: `Business name: ${searchTerm}`,
+            verified: !isViolent,
+            registrationDate: null,
+            owner: null,
+            matchType: "new",
+            violent: isViolent,
+          });
+        }
+
+        // Add similar names
+        similarNames.forEach((name) => {
+          if (name.name.toLowerCase() !== searchTerm.toLowerCase()) {
+            currentSearchResults.push({
+              ...name,
+              matchType: "similar",
+              violent: false,
+            });
+          }
+        });
+
+        // Display results
+        displaySearchResults();
+      }
+
+      // Display search results
+      function displaySearchResults() {
+        const resultsContainer = document.getElementById("searchResults");
+
+        if (currentSearchResults.length === 0) {
+          resultsContainer.innerHTML = `
+            <div class="result-card">
+              <div class="result-header">
+                <div>
+                  <div class="result-name">No Results Found</div>
+                  <p>No business names found matching your search criteria.</p>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          resultsContainer.innerHTML = currentSearchResults
+            .map((result, index) => createResultCard(result, index))
+            .join("");
+        }
+
+        resultsContainer.style.display = "block";
+      }
+
+      // Create individual result card
+      function createResultCard(result, index) {
+        const statusClass = getStatusClass(result.status);
+        const statusIcon = getStatusIcon(result.status);
+        const statusText = getStatusText(result.status);
+
+        return `
+          <div class="result-card">
+            ${
+              result.verified && !result.violent
+                ? '<div class="verification-badge"><i class="fas fa-shield-check"></i> Verified</div>'
+                : ""
+            }
+            
+            ${
+              result.violent
+                ? `
+              <div class="violence-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                This name contains inappropriate content and cannot be registered
+              </div>
+            `
+                : ""
+            }
+
+            <div class="result-header">
+              <div>
+                <div class="result-name">${result.name}</div>
+                <div class="result-status ${statusClass}">
+                  <i class="${statusIcon}"></i>
+                  <span>${statusText}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-info">
+              <div class="info-item">
+                <i class="fas fa-tag info-icon"></i>
+                <span>Category: ${result.category}</span>
+              </div>
+              <div class="info-item">
+                <i class="fas fa-calendar info-icon"></i>
+                <span>Match Type: ${
+                  result.matchType === "exact"
+                    ? "Exact Match"
+                    : result.matchType === "similar"
+                    ? "Similar Name"
+                    : "New Name"
+                }</span>
+              </div>
+              ${
+                result.registrationDate
+                  ? `
+                <div class="info-item">
+                  <i class="fas fa-clock info-icon"></i>
+                  <span>Registered: ${new Date(
+                    result.registrationDate
+                  ).toLocaleDateString()}</span>
+                </div>
+              `
+                  : ""
+              }
+              ${
+                result.owner
+                  ? `
+                <div class="info-item">
+                  <i class="fas fa-user info-icon"></i>
+                  <span>Owner: ${result.owner}</span>
+                </div>
+              `
+                  : ""
+              }
+            </div>
+
+            <div class="result-description">
+              <strong>Description:</strong> ${result.description}
+            </div>
+
+            <div class="result-actions">
+              ${getActionButtons(result, index)}
+            </div>
+          </div>
+        `;
+      }
+
+      // Get status class for styling
+      function getStatusClass(status) {
+        switch (status) {
+          case "available":
+            return "status-available";
+          case "taken":
+            return "status-taken";
+          case "reserved":
+            return "status-reserved";
+          case "rejected":
+            return "status-taken";
+          default:
+            return "status-pending";
+        }
+      }
+
+      // Get status icon
+      function getStatusIcon(status) {
+        switch (status) {
+          case "available":
+            return "fas fa-check-circle";
+          case "taken":
+            return "fas fa-times-circle";
+          case "reserved":
+            return "fas fa-clock";
+          case "rejected":
+            return "fas fa-ban";
+          default:
+            return "fas fa-question-circle";
+        }
+      }
+
+      // Get status text
+      function getStatusText(status) {
+        switch (status) {
+          case "available":
+            return "Available";
+          case "taken":
+            return "Taken";
+          case "reserved":
+            return "Reserved";
+          case "rejected":
+            return "Rejected";
+          default:
+            return "Unknown";
+        }
+      }
+
+      // Get action buttons based on status
+      function getActionButtons(result, index) {
+        if (result.violent) {
+          return `
+            <button class="btn btn-secondary" disabled>
+              <i class="fas fa-ban"></i> Cannot Reserve
+            </button>
+            <button class="btn btn-secondary" onclick="suggestAlternatives('${result.name}')">
+              <i class="fas fa-lightbulb"></i> Suggest Alternatives
+            </button>
+          `;
+        }
+
+        switch (result.status) {
+          case "available":
+            return `
+              <button class="btn btn-primary" onclick="reserveName('${result.name}', ${index})">
+                <i class="fas fa-bookmark"></i> Reserve Name (₦6,500)
+              </button>
+              <button class="btn btn-accent" onclick="checkSimilarNames('${result.name}')">
+                <i class="fas fa-search"></i> Check Similar Names
+              </button>
+            `;
+          case "taken":
+            return `
+              <button class="btn btn-secondary" disabled>
+                <i class="fas fa-times"></i> Not Available
+              </button>
+              <button class="btn btn-accent" onclick="suggestAlternatives('${result.name}')">
+                <i class="fas fa-lightbulb"></i> Suggest Alternatives
+              </button>
+            `;
+          case "reserved":
+            return `
+              <button class="btn btn-secondary" disabled>
+                <i class="fas fa-clock"></i> Reserved
+              </button>
+              <button class="btn btn-accent" onclick="suggestAlternatives('${result.name}')">
+                <i class="fas fa-lightbulb"></i> Suggest Alternatives
+              </button>
+            `;
+          default:
+            return `
+              <button class="btn btn-secondary" disabled>
+                <i class="fas fa-question"></i> Status Unknown
+              </button>
+            `;
+        }
+      }
+
+      // Reserve name function
+      function reserveName(businessName, index) {
+        currentPaymentData = {
+          businessName: businessName,
+          amount: 6500,
+          reservationFee: 5000,
+          processingFee: 500,
+          verificationFee: 1000,
+          reference: generateReservationReference(),
+          userId: JSON.parse(localStorage.getItem("cacUser"))?.email || "guest",
+          timestamp: Date.now(),
+          status: "pending",
+        };
+
+        // Update modal content
+        document.getElementById("paymentBusinessName").textContent =
+          businessName;
+        document.getElementById("paymentReference").textContent =
+          currentPaymentData.reference;
+
+        // Show payment modal
+        document.getElementById("paymentModal").style.display = "flex";
+      }
+
+      // Generate reservation reference
+      function generateReservationReference() {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        return `NR-${new Date().getFullYear()}-${randomNum}`;
+      }
+
+      // Handle payment proof upload
+      function handlePaymentProofUpload(input) {
+        const file = input.files[0];
+        if (file) {
+          // Check file size (max 2MB)
+          if (file.size > 2 * 1024 * 1024) {
+            showStatusMessage("File size should not exceed 2MB", "error");
+            return;
+          }
+
+          // Display file name
+          document.getElementById("paymentProofFileName").textContent =
+            file.name;
+          currentPaymentData.paymentProof = file.name;
+
+          // Enable submit button
+          document.getElementById("submitPaymentProofBtn").disabled = false;
+        }
+      }
+
+      // Submit payment proof
+      function submitPaymentProof() {
+        if (!currentPaymentData.paymentProof) {
+          showStatusMessage("Please upload payment proof first", "warning");
+          return;
+        }
+
+        // Show loading state
+        const btn = document.getElementById("submitPaymentProofBtn");
+        btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
+        btn.disabled = true;
+
+        // Save payment data to Firebase
+        const paymentData = {
+          ...currentPaymentData,
+          paymentDate: new Date().toISOString(),
+        };
+
+        namePaymentsRef
+          .push()
+          .set(paymentData)
+          .then(() => {
+            // Save reservation data
+            const reservationData = {
+              businessName: currentPaymentData.businessName,
+              userId: currentPaymentData.userId,
+              reference: currentPaymentData.reference,
+              status: "pending_verification",
+              reservedAt: new Date().toISOString(),
+              expiresAt: new Date(
+                Date.now() + 30 * 24 * 60 * 60 * 1000
+              ).toISOString(), // 30 days
+            };
+
+            return nameReservationsRef.push().set(reservationData);
+          })
+          .then(() => {
+            showStatusMessage(
+              "Payment proof submitted successfully! Your name reservation is being processed.",
+              "success"
+            );
+            closePaymentModal();
+
+            // Update the result card to show pending status
+            updateResultStatus(
+              currentPaymentData.businessName,
+              "pending_verification"
+            );
+
+            // Simulate verification process (in real app, this would be done by admin)
+            setTimeout(() => {
+              simulateVerificationProcess();
+            }, 10000); // 10 seconds for demo
+          })
+          .catch((error) => {
+            console.error("Error saving payment data:", error);
+            showStatusMessage("An error occurred. Please try again.", "error");
+            btn.innerHTML =
+              '<i class="fas fa-check-circle"></i> Submit Payment Proof';
+            btn.disabled = false;
+          });
+      }
+
+      // Simulate verification process
+      function simulateVerificationProcess() {
+        // In a real app, this would be done by admin verification
+        showStatusMessage(
+          "Payment verified! Your business name has been successfully reserved.",
+          "success"
+        );
+        updateResultStatus(currentPaymentData.businessName, "reserved");
+
+        // Save to user's reserved names
+        const userReservations =
+          JSON.parse(localStorage.getItem("userNameReservations")) || [];
+        userReservations.push({
+          name: currentPaymentData.businessName,
+          reference: currentPaymentData.reference,
+          reservedAt: new Date().toISOString(),
+          status: "reserved",
+        });
+        localStorage.setItem(
+          "userNameReservations",
+          JSON.stringify(userReservations)
+        );
+      }
+
+      // Update result status in the UI
+      function updateResultStatus(businessName, newStatus) {
+        const resultIndex = currentSearchResults.findIndex(
+          (result) => result.name === businessName
+        );
+        if (resultIndex !== -1) {
+          currentSearchResults[resultIndex].status = newStatus;
+          displaySearchResults();
+        }
+      }
+
+      // Close payment modal
+      function closePaymentModal() {
+        document.getElementById("paymentModal").style.display = "none";
+        // Reset form
+        document.getElementById("paymentProofFile").value = "";
+        document.getElementById("paymentProofFileName").textContent = "";
+        document.getElementById("submitPaymentProofBtn").disabled = true;
+        document.getElementById("submitPaymentProofBtn").innerHTML =
+          '<i class="fas fa-check-circle"></i> Submit Payment Proof';
+      }
+
+      // Copy to clipboard function
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            showStatusMessage("Copied to clipboard!", "success");
+          })
+          .catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            showStatusMessage("Copied to clipboard!", "success");
+          });
+      }
+
+      // Check similar names
+      function checkSimilarNames(businessName) {
+        const searchInput = document.getElementById("businessNameSearch");
+        searchInput.value = businessName + " ";
+        searchBusinessName();
+      }
+
+      // Suggest alternatives
+      function suggestAlternatives(businessName) {
+        const alternatives = [
+          businessName + " Limited",
+          businessName + " Services",
+          businessName + " Solutions",
+          businessName + " Group",
+          businessName + " Enterprise",
+          "New " + businessName,
+          businessName + " Plus",
+          businessName + " Pro",
+        ];
+
+        const randomAlternatives = alternatives
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3);
+
+        showStatusMessage(
+          `Suggested alternatives: ${randomAlternatives.join(", ")}`,
+          "info"
+        );
+      }
+
+      // Show status message
+      function showStatusMessage(message, type) {
+        // Remove existing status messages
+        const existingMessages = document.querySelectorAll(".status-message");
+        existingMessages.forEach((msg) => msg.remove());
+
+        // Create new status message
+        const statusMessage = document.createElement("div");
+        statusMessage.className = `status-message status-${type}`;
+        statusMessage.innerHTML = `
+          <i class="fas fa-${getMessageIcon(type)}"></i>
+          <span>${message}</span>
+        `;
+
+        // Insert at the top of main content
+        const mainContent = document.querySelector(".main-content");
+        mainContent.insertBefore(statusMessage, mainContent.firstChild);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          statusMessage.remove();
+        }, 5000);
+      }
+
+      // Get message icon based on type
+      function getMessageIcon(type) {
+        switch (type) {
+          case "success":
+            return "check-circle";
+          case "warning":
+            return "exclamation-triangle";
+          case "error":
+            return "times-circle";
+          case "info":
+            return "info-circle";
+          default:
+            return "info-circle";
+        }
+      }
+
+      // Functions from other pages (for consistency)
+      function showNotifications() {
+        showStatusMessage("Notifications would appear here", "info");
+      }
+
+      function showProfile() {
+        const userData = JSON.parse(localStorage.getItem("cacUser")) || {};
+        showStatusMessage(
+          `Profile: ${userData.fullName || "N/A"} (${userData.email || "N/A"})`,
+          "info"
+        );
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener("click", function (e) {
+        const modal = document.getElementById("paymentModal");
+        if (e.target === modal) {
+          closePaymentModal();
+        }
+      });
+    </script>
+  </body>
+</html>

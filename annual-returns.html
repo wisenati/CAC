@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAC Nigeria - Annual Returns Filing</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+      :root {
+        --primary-green: #1e5f3e;
+        --secondary-green: #2d7a52;
+        --accent-gold: #d4af37;
+        --light-gold: #f4e8a0;
+        --white: #ffffff;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-800: #343a40;
+        --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 4px 25px rgba(0, 0, 0, 0.15);
+        --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.2);
+        --gradient-primary: linear-gradient(135deg, #1e5f3e 0%, #2d7a52 100%);
+        --gradient-accent: linear-gradient(135deg, #d4af37 0%, #f4e8a0 100%);
+        --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--gray-800);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* App-like Header */
+      .app-header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 1000;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-light);
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-section img {
+        height: 45px;
+        width: auto;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+      }
+
+      .logo-text {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .notification-btn,
+      .profile-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+      }
+
+      .notification-btn:hover,
+      .profile-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Main Content */
+      .main-content {
+        max-width: 1200px;
+        margin: 100px auto 40px;
+        padding: 0 20px;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .page-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+      }
+
+      .page-subtitle {
+        font-size: 1.1rem;
+        color: var(--gray-800);
+        opacity: 0.8;
+      }
+
+      /* Registration Steps */
+      .registration-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+        gap: 10px;
+      }
+
+      .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+
+      .step-number {
+        width: 40px;
+        height: 40px;
+        background: var(--gray-200);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 0.5rem;
+        z-index: 2;
+      }
+
+      .step.active .step-number {
+        background: var(--gradient-primary);
+        color: white;
+      }
+
+      .step.completed .step-number {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      .step-label {
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      .step-connector {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: var(--gray-200);
+        z-index: 1;
+      }
+
+      /* Form Section */
+      .form-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        margin-bottom: 2rem;
+      }
+
+      .form-title {
+        font-size: 1.5rem;
+        color: var(--primary-green);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--gray-200);
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(30, 95, 62, 0.1);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-col {
+        flex: 1;
+      }
+
+      /* Company Search */
+      .company-search {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      #companySearch {
+        flex: 1;
+      }
+
+      .search-btn {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 0 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      /* Return Details */
+      .return-details {
+        background: var(--gray-100);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .detail-row {
+        display: flex;
+        margin-bottom: 0.8rem;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        min-width: 200px;
+      }
+
+      /* Financial Section */
+      .financial-section {
+        margin-top: 2rem;
+      }
+
+      .financial-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+      }
+
+      .financial-table th,
+      .financial-table td {
+        padding: 0.8rem;
+        border: 1px solid var(--gray-300);
+        text-align: left;
+      }
+
+      .financial-table th {
+        background: var(--gray-100);
+      }
+
+      .add-row-btn {
+        background: var(--gray-200);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+      }
+
+      /* Payment Section */
+      .payment-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        margin-bottom: 2rem;
+        display: none;
+      }
+
+      .bank-details {
+        background: var(--gray-100);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .bank-detail {
+        display: flex;
+        margin-bottom: 0.8rem;
+      }
+
+      .bank-detail-label {
+        font-weight: 600;
+        min-width: 150px;
+      }
+
+      .payment-proof {
+        margin-top: 1.5rem;
+      }
+
+      .file-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+        border: 2px dashed var(--gray-300);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .file-upload:hover {
+        border-color: var(--primary-green);
+        background: rgba(30, 95, 62, 0.05);
+      }
+
+      .file-upload-icon {
+        font-size: 2rem;
+        color: var(--primary-green);
+        margin-bottom: 1rem;
+      }
+
+      .file-upload-text {
+        text-align: center;
+      }
+
+      #proofFileName {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+
+      /* Status Section */
+      .status-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        margin-bottom: 2rem;
+        text-align: center;
+        display: none;
+      }
+
+      .status-icon {
+        font-size: 3rem;
+        color: var(--accent-gold);
+        margin-bottom: 1rem;
+      }
+
+      .status-message {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+      }
+
+      .status-description {
+        color: var(--gray-800);
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+
+      .document-preview {
+        background: var(--gray-100);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: none;
+      }
+
+      /* Action Buttons */
+      .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+      }
+
+      .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      .btn-secondary {
+        background: var(--gray-200);
+        color: var(--gray-800);
+      }
+
+      .btn-secondary:hover {
+        background: var(--gray-300);
+      }
+
+      .btn-accent {
+        background: var(--gradient-accent);
+        color: var(--primary-green);
+      }
+
+      .btn-accent:hover {
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Footer */
+      .app-footer {
+        background: var(--primary-green);
+        color: var(--white);
+        padding: 2rem 0;
+        text-align: center;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          padding: 0 15px;
+        }
+
+        .logo-text {
+          font-size: 1.2rem;
+        }
+
+        .main-content {
+          margin-top: 80px;
+          padding: 0 15px;
+        }
+
+        .page-title {
+          font-size: 1.8rem;
+        }
+
+        .form-row {
+          flex-direction: column;
+          gap: 0;
+        }
+
+        .registration-steps {
+          flex-wrap: wrap;
+        }
+
+        .step {
+          width: 50%;
+          margin-bottom: 1rem;
+        }
+
+        .step-connector {
+          display: none;
+        }
+
+        .company-search {
+          flex-direction: column;
+        }
+
+        .detail-row {
+          flex-direction: column;
+        }
+
+        .detail-label {
+          min-width: 100%;
+          margin-bottom: 0.3rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .action-buttons {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <img
+            src="https://th.bing.com/th/id/OIP.BYD329vkS6TICObJPDFTPAHaHa?rs=1&pid=ImgDetMain"
+            alt="CAC Logo"
+          />
+          <span class="logo-text">CAC Nigeria</span>
+        </div>
+        <div class="header-actions">
+          <button class="notification-btn" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <button class="profile-btn" onclick="showProfile()">
+            <i class="fas fa-user"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Annual Returns Filing</h1>
+        <p class="page-subtitle">
+          File your annual returns and maintain compliance with CAC regulations
+        </p>
+      </div>
+
+      <!-- Registration Steps -->
+      <div class="registration-steps">
+        <div class="step active" id="step1">
+          <div class="step-number">1</div>
+          <div class="step-connector"></div>
+          <div class="step-label">Company Info</div>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-number">2</div>
+          <div class="step-connector"></div>
+          <div class="step-label">Return Details</div>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-number">3</div>
+          <div class="step-label">Payment</div>
+        </div>
+      </div>
+
+      <!-- Company Information Section -->
+      <div class="form-section" id="companyInfoSection">
+        <h2 class="form-title">Company Information</h2>
+
+        <div class="form-group">
+          <label for="companySearch" class="form-label"
+            >Search for your registered company</label
+          >
+          <div class="company-search">
+            <input
+              type="text"
+              id="companySearch"
+              class="form-control"
+              placeholder="Enter RC Number or Company Name"
+            />
+            <button class="search-btn" onclick="searchCompany()">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+
+        <div class="return-details" id="companyDetails" style="display: none">
+          <h3>Company Details</h3>
+          <div class="detail-row">
+            <span class="detail-label">RC Number:</span>
+            <span id="rcNumber"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Company Name:</span>
+            <span id="companyName"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Company Type:</span>
+            <span id="companyType"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Registration Date:</span>
+            <span id="regDate"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Business Activity:</span>
+            <span id="businessActivity"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Business Address:</span>
+            <span id="businessAddress"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Last Annual Return Filed:</span>
+            <span id="lastReturn">Not filed yet</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Due Date:</span>
+            <span id="dueDate" style="color: red; font-weight: 600"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Filing Fee:</span>
+            <span id="filingFee" style="font-weight: 600">₦5,000</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Late Penalty (30 days):</span>
+            <span id="latePenalty" style="color: red; font-weight: 600"
+              >₦2,500</span
+            >
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Total Amount Due:</span>
+            <span id="totalAmount" style="font-weight: 600">₦7,500</span>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button
+            class="btn btn-secondary"
+            onclick="window.location.href='service.html'"
+          >
+            <i class="fas fa-arrow-left"></i> Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="proceedBtn"
+            onclick="proceedToReturnDetails()"
+            disabled
+          >
+            Continue <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Return Details Section -->
+      <div class="form-section" id="returnDetailsSection" style="display: none">
+        <h2 class="form-title">Annual Return Details</h2>
+
+        <div class="form-group">
+          <label class="form-label">Financial Year Ending</label>
+          <input
+            type="date"
+            id="financialYearEnd"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Principal Business Activity</label>
+          <input
+            type="text"
+            id="principalActivity"
+            class="form-control"
+            readonly
+          />
+        </div>
+
+        <div class="financial-section">
+          <h3>Financial Information</h3>
+
+          <table class="financial-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Amount (₦)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Authorized Share Capital</td>
+                <td>
+                  <input type="number" class="form-control" value="1000000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Issued Share Capital</td>
+                <td>
+                  <input type="number" class="form-control" value="500000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Total Assets</td>
+                <td>
+                  <input type="number" class="form-control" value="750000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Total Liabilities</td>
+                <td>
+                  <input type="number" class="form-control" value="250000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Turnover</td>
+                <td>
+                  <input type="number" class="form-control" value="1500000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Profit Before Tax</td>
+                <td>
+                  <input type="number" class="form-control" value="300000" />
+                </td>
+              </tr>
+              <tr>
+                <td>Profit After Tax</td>
+                <td>
+                  <input type="number" class="form-control" value="200000" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">List of Directors (as at year end)</label>
+          <textarea id="directorsList" class="form-control" rows="3" required>
+1. John Doe - Managing Director
+2. Jane Smith - Director
+                </textarea
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"
+            >List of Shareholders (as at year end)</label
+          >
+          <textarea
+            id="shareholdersList"
+            class="form-control"
+            rows="3"
+            required
+          >
+1. John Doe - 500,000 shares (50%)
+2. Jane Smith - 500,000 shares (50%)
+                </textarea
+          >
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="backToCompanyInfo()">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button class="btn btn-primary" onclick="proceedToPaymentSection()">
+            Continue to Payment <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Payment Section -->
+      <div class="payment-section" id="paymentSection">
+        <h2 class="form-title">Make Payment</h2>
+
+        <div class="bank-details">
+          <h3>Bank Transfer Details</h3>
+          <p>Please transfer the exact amount to the account below:</p>
+
+          <div class="bank-detail">
+            <span class="bank-detail-label">Bank Name:</span>
+            <span>Palmpay</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Account Name:</span>
+            <span>ALRAHUZ- CAC</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Account Number:</span>
+            <span>6661855506</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Amount:</span>
+            <span id="paymentAmount">₦7,500</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail-label">Reference:</span>
+            <span id="paymentReference">AR-2025-0001</span>
+          </div>
+
+          <p class="mt-3">
+            <strong>Important:</strong> Use the reference number above when
+            making payment
+          </p>
+        </div>
+
+        <div class="payment-proof">
+          <h3>Upload Payment Proof</h3>
+          <p>After making the transfer, upload your payment receipt below:</p>
+
+          <div
+            class="file-upload"
+            onclick="document.getElementById('proofFile').click()"
+          >
+            <div class="file-upload-icon">
+              <i class="fas fa-file-upload"></i>
+            </div>
+            <div class="file-upload-text">
+              <p>Click to upload payment receipt</p>
+              <p><small>(JPEG, PNG or PDF, max 2MB)</small></p>
+            </div>
+            <span id="proofFileName"></span>
+          </div>
+          <input
+            type="file"
+            id="proofFile"
+            accept=".jpg,.jpeg,.png,.pdf"
+            style="display: none"
+            onchange="handleFileUpload(this)"
+          />
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="backToReturnDetails()">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button
+            class="btn btn-primary"
+            id="submitPaymentBtn"
+            onclick="submitPayment()"
+            disabled
+          >
+            <i class="fas fa-check-circle"></i> Submit Payment Proof
+          </button>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Do not leave this page</strong> until your payment is
+          verified. You will receive your filing confirmation here once
+          approved.
+        </div>
+      </div>
+
+      <!-- Status Section -->
+      <div class="status-section" id="statusSection">
+        <div id="pendingStatus">
+          <div class="status-icon">
+            <i class="fas fa-hourglass-half"></i>
+          </div>
+          <h3 class="status-message">Payment Verification in Progress</h3>
+          <p class="status-description">
+            Your payment proof has been submitted and is being verified by our
+            team. This process typically takes 1-2 business days. You'll receive
+            a notification once your annual return is approved.
+          </p>
+          <p class="status-description">
+            <strong>Do not close this page.</strong> It will automatically
+            update when your filing is approved.
+          </p>
+          <button class="btn btn-secondary" onclick="checkStatus()">
+            <i class="fas fa-sync-alt"></i> Check Status
+          </button>
+        </div>
+
+        <div id="approvedStatus" style="display: none">
+          <div class="status-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h3 class="status-message">Annual Return Approved!</h3>
+          <p class="status-description">
+            Your annual return filing has been successfully processed and
+            approved. You can now download your official CAC filing
+            confirmation.
+          </p>
+
+          <div class="document-preview" id="documentPreview">
+            <h4>Your Filing Documents</h4>
+            <div class="document-list">
+              <p>
+                <i class="fas fa-file-pdf"></i> Annual Return Filing Receipt
+              </p>
+              <p><i class="fas fa-file-pdf"></i> CAC Form CAC10</p>
+              <p><i class="fas fa-file-pdf"></i> Compliance Certificate</p>
+            </div>
+          </div>
+
+          <button class="btn btn-accent" onclick="printDocuments()">
+            <i class="fas fa-print"></i> Print Documents
+          </button>
+          <button class="btn btn-primary mt-2" onclick="downloadDocuments()">
+            <i class="fas fa-download"></i> Download All
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Corporate Affairs Commission Nigeria. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDJP2XIR51qGTLINiKvEoscYTMt11CaZ5s",
+        authDomain: "paytrust-71e30.firebaseapp.com",
+        databaseURL: "https://paytrust-71e30-default-rtdb.firebaseio.com/",
+        projectId: "paytrust-71e30",
+        storageBucket: "paytrust-71e30.appspot.com",
+        messagingSenderId: "492609516838",
+        appId: "1:492609516838:android:5a924ad3b7e8e508fa3de7",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      const paymentsRef = database.ref("annualReturnPayments");
+      const filingsRef = database.ref("annualReturnFilings");
+
+      // Current filing data
+      let currentFiling = {
+        rcNumber: "",
+        companyName: "",
+        companyType: "",
+        amount: 7500,
+        status: "pending",
+        paymentProof: null,
+        userId: null,
+        timestamp: null,
+      };
+
+      // Search for company
+      function searchCompany() {
+        const searchTerm = document.getElementById("companySearch").value;
+        if (!searchTerm) {
+          alert("Please enter your RC Number or Company Name");
+          return;
+        }
+
+        // Get user's registered companies from localStorage
+        const userData = JSON.parse(localStorage.getItem("cacUser")) || {};
+        const userRegistrations =
+          JSON.parse(localStorage.getItem("userRegistrations")) || [];
+
+        // Find the company that matches the search term
+        const foundCompany = userRegistrations.find(
+          (registration) =>
+            registration.businessInfo.name1
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            registration.businessInfo.name2
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
+        );
+
+        if (!foundCompany) {
+          alert("No matching company found in your registrations");
+          return;
+        }
+
+        // Display company details
+        document.getElementById("companyDetails").style.display = "block";
+        document.getElementById("proceedBtn").disabled = false;
+
+        // Set filing data from registration
+        currentFiling.rcNumber =
+          "BN-" + Math.floor(100000 + Math.random() * 900000);
+        currentFiling.companyName = foundCompany.businessInfo.name1;
+        currentFiling.companyType =
+          foundCompany.type === "business-name"
+            ? "Business Name"
+            : foundCompany.type === "llc"
+            ? "Limited Liability Company"
+            : "Incorporated Company";
+
+        // Set the displayed values
+        document.getElementById("rcNumber").textContent =
+          currentFiling.rcNumber;
+        document.getElementById("companyName").textContent =
+          currentFiling.companyName;
+        document.getElementById("companyType").textContent =
+          currentFiling.companyType;
+
+        // Set registration date (today minus 1 year for demo)
+        const regDate = new Date();
+        regDate.setFullYear(regDate.getFullYear() - 1);
+        document.getElementById("regDate").textContent =
+          regDate.toLocaleDateString();
+
+        // Set business activity from registration
+        document.getElementById("businessActivity").textContent =
+          foundCompany.businessInfo.activity;
+        document.getElementById("principalActivity").value =
+          foundCompany.businessInfo.activity;
+
+        // Set business address from registration
+        document.getElementById("businessAddress").textContent =
+          foundCompany.businessInfo.address;
+
+        // Set due date (registration date + 1 year)
+        const dueDate = new Date(regDate);
+        dueDate.setFullYear(dueDate.getFullYear() + 1);
+        document.getElementById("dueDate").textContent =
+          dueDate.toLocaleDateString() + " (Overdue)";
+
+        // Generate reference number
+        generateReferenceNumber();
+      }
+
+      // Generate unique reference number
+      function generateReferenceNumber() {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const ref = `AR-${new Date().getFullYear()}-${randomNum}`;
+        document.getElementById("paymentReference").textContent = ref;
+        currentFiling.reference = ref;
+        return ref;
+      }
+
+      // Proceed to return details
+      function proceedToReturnDetails() {
+        document.getElementById("companyInfoSection").style.display = "none";
+        document.getElementById("returnDetailsSection").style.display = "block";
+
+        // Update steps
+        document.getElementById("step1").classList.remove("active");
+        document.getElementById("step1").classList.add("completed");
+        document.getElementById("step2").classList.add("active");
+      }
+
+      // Proceed to payment section
+      function proceedToPaymentSection() {
+        // Validate form
+        if (!validateReturnDetails()) {
+          return;
+        }
+
+        // Get user data
+        const userData = JSON.parse(localStorage.getItem("cacUser")) || {};
+        currentFiling.userId = userData.email || "guest";
+        currentFiling.timestamp = Date.now();
+
+        // Collect return details
+        currentFiling.financialDetails = {
+          yearEnd: document.getElementById("financialYearEnd").value,
+          principalActivity: document.getElementById("principalActivity").value,
+          authorizedCapital: document.querySelector(
+            ".financial-table tr:nth-child(1) input"
+          ).value,
+          issuedCapital: document.querySelector(
+            ".financial-table tr:nth-child(2) input"
+          ).value,
+          totalAssets: document.querySelector(
+            ".financial-table tr:nth-child(3) input"
+          ).value,
+          totalLiabilities: document.querySelector(
+            ".financial-table tr:nth-child(4) input"
+          ).value,
+          turnover: document.querySelector(
+            ".financial-table tr:nth-child(5) input"
+          ).value,
+          profitBeforeTax: document.querySelector(
+            ".financial-table tr:nth-child(6) input"
+          ).value,
+          profitAfterTax: document.querySelector(
+            ".financial-table tr:nth-child(7) input"
+          ).value,
+          directors: document.getElementById("directorsList").value,
+          shareholders: document.getElementById("shareholdersList").value,
+        };
+
+        // Show payment section
+        document.getElementById("returnDetailsSection").style.display = "none";
+        document.getElementById("paymentSection").style.display = "block";
+
+        // Update steps
+        document.getElementById("step2").classList.remove("active");
+        document.getElementById("step2").classList.add("completed");
+        document.getElementById("step3").classList.add("active");
+      }
+
+      // Validate return details
+      function validateReturnDetails() {
+        const requiredFields = [
+          "financialYearEnd",
+          "principalActivity",
+          "directorsList",
+          "shareholdersList",
+        ];
+
+        let isValid = true;
+
+        requiredFields.forEach((fieldId) => {
+          const field = document.getElementById(fieldId);
+          if (!field.value.trim()) {
+            field.style.borderColor = "red";
+            isValid = false;
+          } else {
+            field.style.borderColor = "";
+          }
+        });
+
+        if (!isValid) {
+          alert("Please fill in all required fields");
+          return false;
+        }
+
+        // Validate financial numbers
+        const financialInputs = document.querySelectorAll(
+          ".financial-table input"
+        );
+        financialInputs.forEach((input) => {
+          if (!input.value || isNaN(input.value)) {
+            input.style.borderColor = "red";
+            isValid = false;
+          } else {
+            input.style.borderColor = "";
+          }
+        });
+
+        if (!isValid) {
+          alert("Please enter valid financial amounts");
+          return false;
+        }
+
+        return true;
+      }
+
+      // Handle file upload
+      function handleFileUpload(input) {
+        const file = input.files[0];
+        if (file) {
+          // Check file size (max 2MB)
+          if (file.size > 2 * 1024 * 1024) {
+            alert("File size should not exceed 2MB");
+            return;
+          }
+
+          // Display file name
+          document.getElementById("proofFileName").textContent = file.name;
+          currentFiling.paymentProof = file.name;
+
+          // Enable submit button
+          document.getElementById("submitPaymentBtn").disabled = false;
+
+          // In a real app, you would upload the file to storage
+          // For this example, we'll just store the file name
+        }
+      }
+
+      // Submit payment proof
+      function submitPayment() {
+        // Show loading state
+        const btn = document.getElementById("submitPaymentBtn");
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+
+        // In a real app, you would upload the file to Firebase Storage
+        // For this example, we'll simulate the process
+
+        setTimeout(() => {
+          // Save payment data to Firebase
+          const paymentData = {
+            ...currentFiling,
+            status: "pending",
+            paymentDate: new Date().toISOString(),
+          };
+
+          const newPaymentRef = paymentsRef.push();
+          newPaymentRef
+            .set(paymentData)
+            .then(() => {
+              // Save filing data
+              const filingData = {
+                ...currentFiling.financialDetails,
+                rcNumber: currentFiling.rcNumber,
+                companyName: currentFiling.companyName,
+                amount: currentFiling.amount,
+                reference: currentFiling.reference,
+                status: "pending",
+                userId: currentFiling.userId,
+                timestamp: currentFiling.timestamp,
+              };
+
+              const newFilingRef = filingsRef.push();
+              return newFilingRef.set(filingData);
+            })
+            .then(() => {
+              // Show status section
+              document.getElementById("paymentSection").style.display = "none";
+              document.getElementById("statusSection").style.display = "block";
+
+              // Start checking for approval
+              checkStatus();
+            })
+            .catch((error) => {
+              console.error("Error saving data:", error);
+              alert("An error occurred. Please try again.");
+              btn.innerHTML =
+                '<i class="fas fa-check-circle"></i> Submit Payment Proof';
+              btn.disabled = false;
+            });
+        }, 1500);
+      }
+
+      // Check payment/filing status
+      function checkStatus() {
+        // In a real app, you would check Firebase for updates
+        // For this example, we'll simulate admin approval after 30 seconds
+
+        const statusBtn = document.querySelector("#statusSection .btn");
+        statusBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        statusBtn.disabled = true;
+
+        // Simulate admin approval process
+        setTimeout(() => {
+          // Update status in Firebase (simulated)
+          currentFiling.status = "approved";
+
+          // Show approved status
+          document.getElementById("pendingStatus").style.display = "none";
+          document.getElementById("approvedStatus").style.display = "block";
+          document.getElementById("documentPreview").style.display = "block";
+
+          // Update filing in localStorage
+          const userFilings =
+            JSON.parse(localStorage.getItem("userFilings")) || [];
+          userFilings.push(currentFiling);
+          localStorage.setItem("userFilings", JSON.stringify(userFilings));
+        }, 30000); // 30 seconds delay for demo
+      }
+
+      // Print documents
+      function printDocuments() {
+        alert("Printing documents...");
+        // In a real app, this would open print dialog for the documents
+      }
+
+      // Download documents
+      function downloadDocuments() {
+        alert("Downloading all documents...");
+        // In a real app, this would download a zip file with all documents
+      }
+
+      // Back to company info
+      function backToCompanyInfo() {
+        document.getElementById("returnDetailsSection").style.display = "none";
+        document.getElementById("companyInfoSection").style.display = "block";
+
+        document.getElementById("step1").classList.add("active");
+        document.getElementById("step1").classList.remove("completed");
+        document.getElementById("step2").classList.remove("active");
+      }
+
+      // Back to return details
+      function backToReturnDetails() {
+        document.getElementById("paymentSection").style.display = "none";
+        document.getElementById("returnDetailsSection").style.display = "block";
+
+        document.getElementById("step2").classList.add("active");
+        document.getElementById("step2").classList.remove("completed");
+        document.getElementById("step3").classList.remove("active");
+      }
+
+      // Functions from service.html (for consistency)
+      function showNotifications() {
+        alert("Notifications would appear here");
+      }
+
+      function showProfile() {
+        const userData = JSON.parse(localStorage.getItem("cacUser")) || {};
+        alert(
+          `Profile Information:\n\nName: ${
+            userData.fullName || "N/A"
+          }\nEmail: ${userData.email || "N/A"}`
+        );
+      }
+
+      // Initialize the page
+      document.addEventListener("DOMContentLoaded", function () {
+        // Check if user is logged in
+        const userData = JSON.parse(localStorage.getItem("cacUser"));
+        if (!userData) {
+          alert("Please log in to access this service");
+          window.location.href = "registration.html";
+        }
+
+        // Set default financial year end to last year
+        const today = new Date();
+        const lastYear = new Date(today.getFullYear() - 1, 11, 31);
+        document.getElementById("financialYearEnd").valueAsDate = lastYear;
+      });
+    </script>
+  </body>
+</html>
